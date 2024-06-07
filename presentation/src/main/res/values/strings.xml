@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Test</string>
+    <string name="home_screen_top_bar_title">Movies</string>
+    <string name="movie_list_header">Latest Movies</string>
+    <string name="movie_image">Movie Poster</string>
+    <string name="retry">Retry</string>
+    <string name="data_loaded_message">Data loaded successfully</string>
+</resources>
