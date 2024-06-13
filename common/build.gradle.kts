@@ -23,6 +23,28 @@ android {
             )
         }
     }
+
+    android {
+        flavorDimensions.add(
+            "environment"
+        )
+        productFlavors {
+            create(
+                "dev"
+            ) {
+                dimension =
+                    "environment"
+
+            }
+            create(
+                "prod"
+            ) {
+                dimension =
+                    "environment"
+
+            }
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -30,14 +52,4 @@ android {
     kotlinOptions {
         jvmTarget = libs.versions.jvmTarget.get()
     }
-}
-
-dependencies {
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

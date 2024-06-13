@@ -13,10 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import com.mvi.presentation.R
 import com.mvi.presentation.ui.theme.OnSurfaceBackgroundAlpha
-
 
 @Composable
 fun MovieListHeader() {
@@ -39,10 +37,4 @@ fun MovieListHeader() {
             textAlign = TextAlign.Center
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun UsersListHeaderPreview() {
-    MovieListHeader()
 }

@@ -2,10 +2,10 @@ package com.mvi.data
 
 import androidx.test.filters.SmallTest
 import com.google.gson.JsonParseException
-import com.mvi.base.Resource
+import com.mvi.common.Resource
+import com.mvi.data.api.ApiService
 import com.mvi.data.mapper.detail.DetailDataDomainMapper
 import com.mvi.data.repository.detail.DetailRepositoryImpl
-import com.mvi.data.source.detail.DetailRemoteDataSource
 import com.mvi.domain.repository.detail.DetailRepository
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -23,6 +23,7 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import retrofit2.Response
 import java.io.IOException
 import kotlin.time.ExperimentalTime
 
@@ -33,11 +34,10 @@ class DetailRepositoryImplTest {
     private val dispatcher: CoroutineDispatcher = StandardTestDispatcher()
 
     @MockK
-    private lateinit var detailRemoteDataSource: DetailRemoteDataSource
+    private lateinit var apiService: ApiService
 
     private val detailDataDomainMapper = DetailDataDomainMapper()
     private lateinit var detailRepository: DetailRepository
-
 
     @Before
     fun setUp() {
@@ -45,7 +45,7 @@ class DetailRepositoryImplTest {
         MockKAnnotations.init(this)
 
         detailRepository = DetailRepositoryImpl(
-            detailRemoteDataSource, detailDataDomainMapper
+            apiService, detailDataDomainMapper, dispatcher
         )
     }
 
@@ -61,36 +61,31 @@ class DetailRepositoryImplTest {
         val model = TestDataGenerator.generateMovieDetailData()
 
         //Given
-        coEvery { detailRemoteDataSource.fetchMovieDetail(ID) } returns model
+        coEvery { apiService.getMovieDetails(ID) } returns Response.success(model)
 
         //When
         val result = detailRepository.fetchMovieDetail(ID)
         //Assertion
-
         Assert.assertEquals(
-            result, Resource.Success(detailDataDomainMapper.from(model))
-        )
-        Assert.assertEquals(
-            (result as Resource.Success).data,
-            detailDataDomainMapper.from(model)
+            (result as Resource.Success).data, detailDataDomainMapper.from(model)
         )
 
         //Then
-        coVerify { detailRemoteDataSource.fetchMovieDetail(ID) }
+        coVerify { apiService.getMovieDetails(ID) }
 
     }
 
     @Test
     fun test_movie_repository_impl_failure_no_data() = runTest {
         //Given
-        coEvery { detailRemoteDataSource.fetchMovieDetail(ID) }
+        coEvery { apiService.getMovieDetails(ID) }
 
         //When && Assertions
         val result = detailRepository.fetchMovieDetail(ID)
         Assert.assertEquals(result.javaClass, Resource.Error::class.java)
 
         // Then
-        coVerify { detailRemoteDataSource.fetchMovieDetail(ID) }
+        coVerify { apiService.getMovieDetails(ID) }
 
     }
 
@@ -98,16 +93,14 @@ class DetailRepositoryImplTest {
     fun test_movie_repository_impl_failure() = runTest {
 
         // Given
-        coEvery { detailRemoteDataSource.fetchMovieDetail(ID) } throws Exception()
-
+        coEvery { apiService.getMovieDetails(ID) } throws Exception()
 
         // When && Assertions
         val result = detailRepository.fetchMovieDetail(ID)
         Assert.assertEquals(result.javaClass, Resource.Error::class.java)
 
-
         // Then
-        coVerify { detailRemoteDataSource.fetchMovieDetail(ID) }
+        coVerify { apiService.getMovieDetails(ID) }
 
     }
 
@@ -115,17 +108,16 @@ class DetailRepositoryImplTest {
     fun test_movie_repository_impl_failure_parse() = runTest {
 
         // Given
-        coEvery { detailRemoteDataSource.fetchMovieDetail(ID) } throws JsonParseException(
+        coEvery { apiService.getMovieDetails(ID) } throws JsonParseException(
             PARSE_ERROR
         )
-
 
         // When && Assertions
         val result = detailRepository.fetchMovieDetail(ID)
         Assert.assertEquals(result.javaClass, Resource.Error::class.java)
 
         // Then
-        coVerify { detailRemoteDataSource.fetchMovieDetail(ID) }
+        coVerify { apiService.getMovieDetails(ID) }
 
     }
 
@@ -133,17 +125,16 @@ class DetailRepositoryImplTest {
     fun test_movie_repository_impl_failure_io() = runTest {
 
         // Given
-        coEvery { detailRemoteDataSource.fetchMovieDetail(ID) } throws IOException(
+        coEvery { apiService.getMovieDetails(ID) } throws IOException(
             NETWORK_ERROR
         )
-
 
         // When && Assertions
         val result = detailRepository.fetchMovieDetail(ID)
         Assert.assertEquals(result.javaClass, Resource.Error::class.java)
 
         // Then
-        coVerify { detailRemoteDataSource.fetchMovieDetail(ID) }
+        coVerify { apiService.getMovieDetails(ID) }
 
     }
 

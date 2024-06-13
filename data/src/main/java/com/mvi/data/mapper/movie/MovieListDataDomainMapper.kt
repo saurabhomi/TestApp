@@ -1,29 +1,27 @@
 package com.mvi.data.mapper.movie
 
-import com.mvi.base.Mapper
+import com.mvi.common.Mapper
 import com.mvi.data.model.movie.MovieDataModel
-import com.mvi.data.model.movie.MovieListDataModel
-import com.mvi.domain.entity.movie.MovieEntityModel
-import com.mvi.domain.entity.movie.MovieListEntityModel
+import com.mvi.domain.model.movie.MovieDomainModel
+import com.mvi.network.constant.NetworkConstants
 import javax.inject.Inject
 
 /**
- * Mapper class for convert [MovieListDataModel] to [MovieListEntityModel] and vice versa
+ * Mapper class for convert [MovieDataModel] to [MovieDomainModel] and vice versa
  */
 class MovieListDataDomainMapper @Inject constructor() :
-    Mapper<MovieDataModel, MovieEntityModel> {
+    Mapper<MovieDataModel, MovieDomainModel> {
 
-    override fun from(i: MovieDataModel?): MovieEntityModel {
-        return MovieEntityModel(result = i?.result?.map {
-            MovieListEntityModel(
+    override fun from(i: MovieDataModel): MovieDomainModel {
+        return MovieDomainModel(result = i.result!!.map {
+            MovieDomainModel.MovieListDomainModel(
                 id = it.id!!,
                 originalTitle = it.originalTitle!!,
                 overview = it.overview!!,
-                posterPath = it.posterPath!!,
+                posterPath = "${NetworkConstants.IMAGE_URL}${it.posterPath}",
                 voteAverage = it.voteAverage!!
             )
         }
-
         )
     }
 }

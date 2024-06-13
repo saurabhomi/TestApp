@@ -1,13 +1,11 @@
 package com.mvi.domain.repository.movie
 
-import com.mvi.base.Resource
-import com.mvi.domain.entity.movie.MovieEntityModel
+import com.mvi.common.Resource
+import com.mvi.domain.model.movie.MovieDomainModel
 
 /**
  * Methods of Repository
  */
 interface MovieRepository {
-
-    suspend fun fetchMovieList(): Resource<MovieEntityModel>
-
+    suspend fun fetchMovieList(): Resource<MovieDomainModel>
 }

@@ -1,8 +1,6 @@
 package com.mvi.network.di
 
-
 import com.mvi.network.BuildConfig
-import com.mvi.network.api.ApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,8 +10,6 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
-
 
 /**
  * Module that holds Network related classes
@@ -61,15 +57,6 @@ object NetworkModule {
         return Retrofit.Builder().baseUrl(BuildConfig.BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create()).build()
-    }
-
-    /**
-     * Provides [ApiService] instance
-     */
-    @Provides
-    @Singleton
-    fun provideApiService(retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
     }
 
 

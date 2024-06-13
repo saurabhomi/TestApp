@@ -1,7 +1,7 @@
 package com.mvi.domain
 
 import androidx.test.filters.SmallTest
-import com.mvi.base.Resource
+import com.mvi.common.Resource
 import com.mvi.domain.repository.movie.MovieRepository
 import com.mvi.domain.usecase.GetMovieListUseCase
 import io.mockk.MockKAnnotations
@@ -40,7 +40,7 @@ class GetMovieListUseCaseTest {
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         MockKAnnotations.init(this)
-        getMovieListUseCase = GetMovieListUseCase(movieRepository, dispatcher)
+        getMovieListUseCase = GetMovieListUseCase(movieRepository)
     }
 
     @After
@@ -79,7 +79,6 @@ class GetMovieListUseCaseTest {
 
         //When
         val result = getMovieListUseCase.invoke()
-
 
         //Assertion
         Assert.assertEquals(result, data)

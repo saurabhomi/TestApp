@@ -1,11 +1,9 @@
 package com.mvi.presentation.contract
 
-import com.mvi.base.UiEvent
-import com.mvi.base.UiState
+import com.mvi.presentation.UiEvent
+import com.mvi.presentation.UiState
 
 class SplashContract {
-
-
     sealed class Event : UiEvent {
         data object Close : Event()
     }

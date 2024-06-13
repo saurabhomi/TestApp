@@ -27,7 +27,6 @@ fun Retry(onRetryButtonClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
             Icon(
                 painter = painterResource(id = R.drawable.retry_icon),
                 contentDescription = stringResource(id = R.string.retry),

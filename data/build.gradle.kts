@@ -25,6 +25,27 @@ android {
             )
         }
     }
+    android {
+        flavorDimensions.add(
+            "environment"
+        )
+        productFlavors {
+            create(
+                "dev"
+            ) {
+                dimension =
+                    "environment"
+
+            }
+            create(
+                "prod"
+            ) {
+                dimension =
+                    "environment"
+
+            }
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -35,7 +56,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":base"))
+    implementation(project(":common"))
     implementation(project(":domain"))
     implementation(project(":network"))
     implementation(libs.javax.inject)
@@ -58,6 +79,5 @@ dependencies {
     testImplementation(libs.mockk.mockk)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 
 }

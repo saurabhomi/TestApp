@@ -9,75 +9,52 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
-import com.mvi.common.constants.Constants.Companion.EFFECT_KEY
 import com.mvi.presentation.R
 import com.mvi.presentation.contract.DetailScreenContract
 import com.mvi.presentation.ui.common.ProgressIndicator
 import com.mvi.presentation.ui.common.Retry
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 @Composable
 fun DetailScreen(
     state: DetailScreenContract.State,
-    effectFlow: Flow<DetailScreenContract.Effect>,
     onEventSent: (event: DetailScreenContract.Event) -> Unit,
-    onNavigationRequested: (DetailScreenContract.Effect.Navigation) -> Unit
+    onNavigationRequested: () -> Unit
 ) {
-
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val snackBarSuccessMessage = stringResource(R.string.data_loaded_message)
 
-    LaunchedEffect(EFFECT_KEY) {
-        effectFlow.onEach { effect ->
-            when (effect) {
-                DetailScreenContract.Effect.Navigation.Back -> {
-                    onNavigationRequested(DetailScreenContract.Effect.Navigation.Back)
+    LaunchedEffect(state) {
+        when (state) {
+            is DetailScreenContract.State.Error ->
+                scope.launch {
+                    showSnackBar(snackBarHostState, state.message)
                 }
 
-                is DetailScreenContract.Effect.ShowError -> {
-                    scope.launch {
-                        showSnackBar(snackBarHostState, effect.message)
-                    }
-                }
-
-                is DetailScreenContract.Effect.ShowSuccess -> {
-                    scope.launch {
-                        showSnackBar(snackBarHostState, snackBarSuccessMessage)
-                    }
-                }
+            is DetailScreenContract.State.Success -> scope.launch {
+                showSnackBar(snackBarHostState, snackBarSuccessMessage)
             }
-        }.collect()
+
+            DetailScreenContract.State.Loading -> onEventSent(DetailScreenContract.Event.OnDetailFetch)
+        }
     }
 
     Scaffold(snackbarHost = {
         SnackbarHost(snackBarHostState)
     }, topBar = {
         DetailScreenTopAppBar {
-            onEventSent(DetailScreenContract.Event.BackButtonClicked)
+            onNavigationRequested()
         }
     }) {
         when (state) {
-            is DetailScreenContract.State.Idle -> {
-                onEventSent(DetailScreenContract.Event.OnDetailFetch)
-            }
-
             is DetailScreenContract.State.Success -> {
-                onEventSent(DetailScreenContract.Event.OnDetailLoaded)
                 MovieDetail(
                     it, state.model
                 )
             }
 
             is DetailScreenContract.State.Error -> {
-                onEventSent(
-                    DetailScreenContract.Event.OnError(
-                        state.message
-                    )
-                )
                 Retry {
                     onEventSent(DetailScreenContract.Event.OnDetailFetch)
                 }

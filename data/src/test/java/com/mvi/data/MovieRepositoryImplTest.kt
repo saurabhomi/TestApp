@@ -2,10 +2,10 @@ package com.mvi.data
 
 import androidx.test.filters.SmallTest
 import com.google.gson.JsonParseException
-import com.mvi.base.Resource
+import com.mvi.common.Resource
+import com.mvi.data.api.ApiService
 import com.mvi.data.mapper.movie.MovieListDataDomainMapper
 import com.mvi.data.repository.movie.MovieRepositoryImpl
-import com.mvi.data.source.movie.MovieRemoteDataSource
 import com.mvi.domain.repository.movie.MovieRepository
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -23,6 +23,7 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import retrofit2.Response
 import java.io.IOException
 import kotlin.time.ExperimentalTime
 
@@ -34,7 +35,7 @@ class MovieRepositoryImplTest {
     private val dispatcher: CoroutineDispatcher = StandardTestDispatcher()
 
     @MockK
-    private lateinit var movieRemoteDataSource: MovieRemoteDataSource
+    private lateinit var apiService: ApiService
 
     private val movieListDataDomainMapper = MovieListDataDomainMapper()
 
@@ -46,7 +47,7 @@ class MovieRepositoryImplTest {
         MockKAnnotations.init(this)
 
         repository = MovieRepositoryImpl(
-            movieRemoteDataSource, movieListDataDomainMapper
+            apiService, movieListDataDomainMapper, dispatcher
         )
     }
 
@@ -61,19 +62,17 @@ class MovieRepositoryImplTest {
 
         val model = TestDataGenerator.generateMovieListData()
 
-        coEvery { movieRemoteDataSource.fetchMovieList() } returns model
+        coEvery { apiService.getMovieList() } returns Response.success(model)
 
         val result = repository.fetchMovieList()
-        Assert.assertEquals(
-            result, Resource.Success(movieListDataDomainMapper.from(model))
-        )
+
         Assert.assertEquals(
             (result as Resource.Success).data,
             movieListDataDomainMapper.from(model)
         )
 
         // Then
-        coVerify { movieRemoteDataSource.fetchMovieList() }
+        coVerify { apiService.getMovieList() }
 
     }
 
@@ -82,15 +81,14 @@ class MovieRepositoryImplTest {
     fun test_movie_repository_impl_failure() = runTest {
 
         // Given
-        coEvery { movieRemoteDataSource.fetchMovieList() } throws Exception()
-
+        coEvery { apiService.getMovieList() } throws Exception()
 
         // When && Assertions
         val result = repository.fetchMovieList()
         Assert.assertEquals(result.javaClass, Resource.Error::class.java)
 
         // Then
-        coVerify { movieRemoteDataSource.fetchMovieList() }
+        coVerify { apiService.getMovieList() }
 
     }
 
@@ -98,17 +96,16 @@ class MovieRepositoryImplTest {
     fun test_movie_repository_impl_failure_parse() = runTest {
 
         // Given
-        coEvery { movieRemoteDataSource.fetchMovieList() } throws JsonParseException(
+        coEvery { apiService.getMovieList() } throws JsonParseException(
             PARSE_ERROR
         )
-
 
         // When && Assertions
         val result = repository.fetchMovieList()
         Assert.assertEquals(result.javaClass, Resource.Error::class.java)
 
         // Then
-        coVerify { movieRemoteDataSource.fetchMovieList() }
+        coVerify { apiService.getMovieList() }
 
     }
 
@@ -116,17 +113,15 @@ class MovieRepositoryImplTest {
     fun test_movie_repository_impl_failure_io() = runTest {
 
         // Given
-        coEvery { movieRemoteDataSource.fetchMovieList() } throws IOException(
+        coEvery { apiService.getMovieList() } throws IOException(
             NETWORK_ERROR
         )
-
-
         // When && Assertions
         val result = repository.fetchMovieList()
         Assert.assertEquals(result.javaClass, Resource.Error::class.java)
 
         // Then
-        coVerify { movieRemoteDataSource.fetchMovieList() }
+        coVerify { apiService.getMovieList() }
 
     }
 
@@ -134,7 +129,7 @@ class MovieRepositoryImplTest {
     fun test_movie_repository_impl_failure_null_pointer() = runTest {
 
         // Given
-        coEvery { movieRemoteDataSource.fetchMovieList() } throws NullPointerException()
+        coEvery { apiService.getMovieList() } throws NullPointerException()
 
 
         // When && Assertions
@@ -142,7 +137,7 @@ class MovieRepositoryImplTest {
         Assert.assertEquals(result.javaClass, Resource.Error::class.java)
 
         // Then
-        coVerify { movieRemoteDataSource.fetchMovieList() }
+        coVerify { apiService.getMovieList() }
 
     }
 

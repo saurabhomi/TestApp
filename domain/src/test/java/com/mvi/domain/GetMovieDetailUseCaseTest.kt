@@ -1,7 +1,7 @@
 package com.mvi.domain
 
 import androidx.test.filters.SmallTest
-import com.mvi.base.Resource
+import com.mvi.common.Resource
 import com.mvi.domain.repository.detail.DetailRepository
 import com.mvi.domain.usecase.GetMovieDetailUseCase
 import io.mockk.MockKAnnotations
@@ -41,7 +41,7 @@ class GetMovieDetailUseCaseTest {
         Dispatchers.setMain(dispatcher)
         MockKAnnotations.init(this)
         detailUseCase = GetMovieDetailUseCase(
-            detailRepository, dispatcher
+            detailRepository
         )
     }
 
@@ -74,7 +74,6 @@ class GetMovieDetailUseCaseTest {
     fun test_detail_use_case_failure() = runTest {
 
         val data = Resource.Error(NullPointerException(NO_DATA_FOUND))
-
 
         //Given
         coEvery { detailRepository.fetchMovieDetail(any()) } returns data

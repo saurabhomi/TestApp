@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -23,21 +25,42 @@ android {
                 getDefaultProguardFile(libs.versions.progaurdTxt.get()),
                 libs.versions.progaurdRules.get()
             )
-            buildConfigField(
-                "String", "API_KEY", "\"f994296f1aa610c1c468e83ce3fa991b\""
-            )
-            buildConfigField(
-                "String", "BASE_URL", "\"https://api.themoviedb.org/3/\"",
-            )
         }
 
-        debug {
-            buildConfigField(
-                "String", "API_KEY", "\"f994296f1aa610c1c468e83ce3fa991b\""
+        android {
+            flavorDimensions.add(
+                "environment"
             )
-            buildConfigField(
-                "String", "BASE_URL", "\"https://api.themoviedb.org/3/\""
-            )
+            productFlavors {
+                val properties = Properties()
+                properties.load(project.rootProject.file("gradle.properties").inputStream())
+                create(
+                    "dev"
+                ) {
+                    dimension =
+                        "environment"
+                    buildConfigField(
+                        "String", "API_KEY", properties.getProperty("api_key")
+                    )
+                    buildConfigField(
+                        "String", "BASE_URL", "\"https://api.themoviedb.org/3/\""
+                    )
+
+                }
+                create(
+                    "prod"
+                ) {
+                    dimension =
+                        "environment"
+                    buildConfigField(
+                        "String", "API_KEY", properties.getProperty("api_key")
+                    )
+                    buildConfigField(
+                        "String", "BASE_URL", "\"https://api.themoviedb.org/3/\""
+                    )
+
+                }
+            }
         }
 
 
@@ -59,7 +82,7 @@ android {
 
 dependencies {
 
-    implementation(project(":base"))
+    implementation(project(":common"))
     implementation(libs.javax.inject)
 
     //dagger
@@ -76,16 +99,12 @@ dependencies {
     testImplementation(libs.jetbrains.kotlinx.coroutines.test)
     // Run Blocking Test
     testImplementation(libs.core.testing)
-    // Truth
-    testImplementation(libs.google.truth)
     // For small test - large test annotations
     testImplementation(libs.androidx.runner)
     // Mock objects
     testImplementation(libs.mockk.mockk)
 
     // For small test - large test annotations
-    testImplementation(libs.androidx.runner)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
 }

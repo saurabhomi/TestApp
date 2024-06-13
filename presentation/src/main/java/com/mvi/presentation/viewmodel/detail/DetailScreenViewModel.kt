@@ -2,12 +2,11 @@ package com.mvi.presentation.viewmodel.detail
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.mvi.base.BaseViewModel
-import com.mvi.base.Resource
-import com.mvi.common.constants.Constants.Companion.Args.MOVIE_ID
+import com.mvi.common.Resource
 import com.mvi.domain.usecase.GetMovieDetailUseCase
+import com.mvi.presentation.BaseViewModel
+import com.mvi.presentation.Constants.Companion.Args.MOVIE_ID
 import com.mvi.presentation.contract.DetailScreenContract
-import com.mvi.presentation.mapper.detail.DetailDomainUiMapper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -16,60 +15,42 @@ import javax.inject.Inject
 @HiltViewModel
 class DetailScreenViewModel @Inject constructor(
     private val detailUseCase: GetMovieDetailUseCase,
-    private val detailMapper: DetailDomainUiMapper,
     savedStateHandle: SavedStateHandle
-) : BaseViewModel<DetailScreenContract.Event, DetailScreenContract.State, DetailScreenContract.Effect>() {
+) : BaseViewModel<DetailScreenContract.Event, DetailScreenContract.State>() {
 
-    private lateinit var id: String
+    private var id: String
 
     init {
-        savedStateHandle.get<String>(MOVIE_ID)?.let {
-            id = it
+        savedStateHandle.get<String>(MOVIE_ID).let {
+            id = it!!
         }
     }
 
     override fun createInitialState(): DetailScreenContract.State {
-        return DetailScreenContract.State.Idle
+        return DetailScreenContract.State.Loading
     }
 
-    override fun handleEvent(event: DetailScreenContract.Event) {
+    fun handleEvent(event: DetailScreenContract.Event) {
         when (event) {
             DetailScreenContract.Event.OnDetailFetch -> {
                 fetchMovieList(id)
-            }
-
-            DetailScreenContract.Event.BackButtonClicked -> {
-                setEffect { DetailScreenContract.Effect.Navigation.Back }
-            }
-
-            DetailScreenContract.Event.OnDetailLoaded -> {
-                setEffect { DetailScreenContract.Effect.ShowSuccess }
-            }
-
-            is DetailScreenContract.Event.OnError -> {
-                setEffect { DetailScreenContract.Effect.ShowError(event.message) }
             }
         }
     }
 
     private fun fetchMovieList(id: String) {
         viewModelScope.launch {
-            setState { DetailScreenContract.State.Loading }
-            detailUseCase.invoke(id).let {
-                when (it) {
-                    is Resource.Success -> {
-                        setState {
-                            DetailScreenContract.State.Success(
-                                detailMapper.from(it.data)
-                            )
-                        }
-                        // Set State
+            when (val data = detailUseCase(id)) {
+                is Resource.Success -> {
+                    setState {
+                        DetailScreenContract.State.Success(
+                            data.data
+                        )
                     }
+                }
 
-                    is Resource.Error -> {
-                        // Set Effect
-                        setState { DetailScreenContract.State.Error(it.exception.message.toString()) }
-                    }
+                is Resource.Error -> {
+                    setState { DetailScreenContract.State.Error(data.exception.message.toString()) }
                 }
             }
         }

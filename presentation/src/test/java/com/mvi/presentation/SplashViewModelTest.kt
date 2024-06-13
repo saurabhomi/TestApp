@@ -23,9 +23,7 @@ import kotlin.time.ExperimentalTime
 @ExperimentalCoroutinesApi
 @SmallTest
 class SplashViewModelTest {
-
     private val dispatcher: CoroutineDispatcher = StandardTestDispatcher()
-
     private lateinit var splashViewModel: SplashViewModel
 
     @Before
@@ -46,16 +44,13 @@ class SplashViewModelTest {
 
     @Test
     fun test_fetch_movie_list_success() = runTest {
-
-
         // Given
         Assert.assertEquals(
             splashViewModel.viewState.value, SplashContract.State.Loading
         )
         // When && Assertions
-        splashViewModel.setEvent(SplashContract.Event.Close)
+        splashViewModel.handleEvent(SplashContract.Event.Close)
         delay(2100)
-
         //Then
         Assert.assertEquals(
             splashViewModel.viewState.value, SplashContract.State.Idle

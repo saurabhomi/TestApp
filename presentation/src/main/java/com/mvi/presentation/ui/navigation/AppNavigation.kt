@@ -5,7 +5,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.mvi.common.constants.Constants.Companion.Args.MOVIE_ID
+import com.mvi.presentation.Constants.Companion.Args.MOVIE_ID
 
 @Composable
 fun AppNavigation() {
@@ -19,7 +19,6 @@ fun AppNavigation() {
         ) {
             MovieScreenDestination(navController)
         }
-
         composable(
             route = Navigation.Routes.DETAILS,
         ) {
@@ -31,8 +30,6 @@ fun AppNavigation() {
 }
 
 object Navigation {
-
-
     object Routes {
         const val MOVIES = "movie"
         const val DETAILS = "$MOVIES/{$MOVIE_ID}"

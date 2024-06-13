@@ -1,6 +1,5 @@
 package com.mvi.presentation.ui.detail
 
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,16 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import coil.compose.rememberAsyncImagePainter
+import com.mvi.domain.model.detail.DetailDomainModel
 import com.mvi.presentation.R
-import com.mvi.presentation.model.detail.DetailUiModel
-
 
 @Composable
-fun MovieDetail(paddingValues: PaddingValues, detailUiModel: DetailUiModel) {
+fun MovieDetail(paddingValues: PaddingValues, detailUiModel: DetailDomainModel) {
     val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
     val paddingXSmall = dimensionResource(id = R.dimen.padding_x_small)
-
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +48,7 @@ fun MovieDetail(paddingValues: PaddingValues, detailUiModel: DetailUiModel) {
 }
 
 @Composable
-fun ScoreSession(detailUiModel: DetailUiModel) {
+fun ScoreSession(detailUiModel: DetailDomainModel) {
     val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
     val avatarSize = dimensionResource(id = R.dimen.avatar_size_large)
     Row(
@@ -77,16 +73,15 @@ fun ScoreSession(detailUiModel: DetailUiModel) {
 
 
 @Composable
-fun Plot(detailUiModel: DetailUiModel) {
+fun Plot(detailUiModel: DetailDomainModel) {
     val paddingXXSmall = dimensionResource(id = R.dimen.padding_xx_small)
     Column {
         Text(
-            text = detailUiModel.originalTitle!!,
+            text = detailUiModel.originalTitle,
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.size(paddingXXSmall))
-
         Text(
             text = detailUiModel.voteAverage.toString(),
             style = MaterialTheme.typography.titleSmall,
@@ -95,11 +90,10 @@ fun Plot(detailUiModel: DetailUiModel) {
     }
 }
 
-
 @Composable
-fun OverView(detailUiModel: DetailUiModel) {
+fun OverView(detailUiModel: DetailDomainModel) {
     Text(
-        text = detailUiModel.overview!!,
+        text = detailUiModel.overview,
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier.fillMaxWidth()
     )

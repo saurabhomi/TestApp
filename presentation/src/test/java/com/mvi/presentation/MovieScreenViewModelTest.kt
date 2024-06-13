@@ -2,11 +2,9 @@ package com.mvi.presentation
 
 
 import androidx.test.filters.SmallTest
-import com.mvi.base.Resource
-import com.mvi.common.constants.Constants.Companion.NO_DATA_FOUND
+import com.mvi.common.Resource
 import com.mvi.domain.usecase.GetMovieListUseCase
 import com.mvi.presentation.contract.MovieListScreenContract
-import com.mvi.presentation.mapper.movie.MovieListDomainUiMapper
 import com.mvi.presentation.viewmodel.movie.MovieScreenViewModel
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
@@ -31,14 +29,10 @@ import kotlin.time.ExperimentalTime
 @ExperimentalCoroutinesApi
 @SmallTest
 class MovieScreenViewModelTest {
-
     private val dispatcher: CoroutineDispatcher = StandardTestDispatcher()
 
     @MockK
     private lateinit var movieListUseCase: GetMovieListUseCase
-
-    private val movieListDomainUiMapper = MovieListDomainUiMapper()
-
     private lateinit var movieScreenViewModel: MovieScreenViewModel
 
     @Before
@@ -47,7 +41,7 @@ class MovieScreenViewModelTest {
         MockKAnnotations.init(this) // turn relaxUnitFun on for all mocks
         // Create MainViewModel before every test
         movieScreenViewModel = MovieScreenViewModel(
-            movieListUseCase, movieListDomainUiMapper
+            movieListUseCase
         )
     }
 
@@ -65,24 +59,21 @@ class MovieScreenViewModelTest {
 
         // Given
         coEvery { movieListUseCase.invoke() } returns model
-        assert(movieScreenViewModel.viewState.value == MovieListScreenContract.State.Idle)
+        Assert.assertEquals(
+            movieScreenViewModel.viewState.value,
+            MovieListScreenContract.State.Loading
+        )
 
         // When && Assertions
-        movieScreenViewModel.setEvent(MovieListScreenContract.Event.OnListFetch)
+        movieScreenViewModel.handleEvent(MovieListScreenContract.Event.OnListFetch)
         delay(100)
-        assert(
-            movieScreenViewModel.viewState.value == MovieListScreenContract.State.Success(
-                movieListDomainUiMapper.from(
-                    data
-                )
-            )
+        Assert.assertEquals(
+            movieScreenViewModel.viewState.value, MovieListScreenContract.State.Success(data)
         )
-        movieScreenViewModel.setEvent(MovieListScreenContract.Event.OnListLoaded)
 
-        assert(
-            (movieScreenViewModel.viewState.value as MovieListScreenContract.State.Success).data == movieListDomainUiMapper.from(
-                data
-            )
+        Assert.assertEquals(
+            (movieScreenViewModel.viewState.value as MovieListScreenContract.State.Success).data,
+            data
         )
         // Then
         coVerify { movieListUseCase.invoke() }
@@ -94,69 +85,29 @@ class MovieScreenViewModelTest {
         val data = Resource.Error(Exception(NO_DATA_FOUND))
         // Given
         coEvery { movieListUseCase.invoke() } returns data
-        assert(movieScreenViewModel.viewState.value == MovieListScreenContract.State.Idle)
-
+        Assert.assertEquals(
+            movieScreenViewModel.viewState.value,
+            MovieListScreenContract.State.Loading
+        )
 
         // When && Assertions
-        movieScreenViewModel.setEvent(MovieListScreenContract.Event.OnListFetch)
+        movieScreenViewModel.handleEvent(MovieListScreenContract.Event.OnListFetch)
         delay(100)
-        assert(
-            movieScreenViewModel.viewState.value == MovieListScreenContract.State.Error(
+        Assert.assertEquals(
+            movieScreenViewModel.viewState.value, MovieListScreenContract.State.Error(
                 data.exception.message.toString()
             )
         )
-
-        movieScreenViewModel.setEvent(
-            MovieListScreenContract.Event.OnError(
-                data.exception.message.toString()
-            )
+        Assert.assertEquals(
+            (movieScreenViewModel.viewState.value as MovieListScreenContract.State.Error).errorMessage,
+            data.exception.message.toString()
         )
-
-        assert(
-            (movieScreenViewModel.viewState.value as MovieListScreenContract.State.Error).errorMessage == data.exception.message.toString()
-        )
-
 
         // Then
         coVerify { movieListUseCase.invoke() }
     }
 
-    @Test
-    fun test_select_movie_item() = runTest {
-
-        val movieItem = TestDataGenerator.generateMovieListData()
-
-        val data = Resource.Success(movieItem)
-
-        // Given
-        coEvery { movieListUseCase.invoke() } returns data
-
-        Assert.assertEquals(
-            movieScreenViewModel.viewState.value,
-            MovieListScreenContract.State.Idle
-        )
-        // When && Assertions
-        movieScreenViewModel.setEvent(MovieListScreenContract.Event.OnListFetch)
-        delay(100)
-
-        Assert.assertEquals(
-            movieScreenViewModel.viewState.value,
-            MovieListScreenContract.State.Success(
-                movieListDomainUiMapper.from(movieItem)
-            )
-        )
-        movieScreenViewModel.setEvent(MovieListScreenContract.Event.OnListLoaded)
-        Assert.assertEquals(
-            (movieScreenViewModel.viewState.value as MovieListScreenContract.State.Success).data.result,
-            movieListDomainUiMapper.from(movieItem).result
-        )
-        movieScreenViewModel.setEvent(
-            MovieListScreenContract.Event.OnListItemClick(
-                movieListDomainUiMapper.from(movieItem).result?.get(0)!!
-            )
-        )
-
-//     Then
-        coVerify { movieListUseCase.invoke() }
+    private companion object {
+        private const val NO_DATA_FOUND = "No data found"
     }
 }

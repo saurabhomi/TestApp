@@ -31,6 +31,32 @@ android {
             )
         }
     }
+
+    android {
+        flavorDimensions.add(
+            "environment"
+        )
+        productFlavors {
+            create(
+                "dev"
+            ) {
+                dimension =
+                    "environment"
+                applicationId =
+                    libs.versions.testNamespace.get()
+
+            }
+            create(
+                "prod"
+            ) {
+                dimension =
+                    "environment"
+                applicationId =
+                    libs.versions.testNamespace.get()
+
+            }
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -39,7 +65,6 @@ android {
         jvmTarget = libs.versions.jvmTarget.get()
     }
     buildFeatures {
-        compose = true
         buildConfig = true
     }
     composeOptions {
@@ -54,41 +79,9 @@ android {
 }
 
 dependencies {
-
-
-    implementation(project(":base"))
     implementation(project(":presentation"))
-    implementation(project(":domain"))
-    implementation(project(":data"))
-    implementation(project(":network"))
-    implementation(project(":common"))
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.navigation.compose)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.material3)
-    implementation(libs.androidx.hilt.navigation.compose)
-
-    // Service Manager
-    implementation(libs.retrofit)
-    implementation(libs.okhttp)
-    implementation(libs.logging.interceptor)
-    implementation(libs.converter.gson)
-
-    //Image Loader
-    implementation(libs.coil.compose)
 }

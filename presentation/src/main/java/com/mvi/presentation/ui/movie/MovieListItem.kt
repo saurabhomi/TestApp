@@ -17,13 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import coil.compose.rememberAsyncImagePainter
+import com.mvi.domain.model.movie.MovieDomainModel
 import com.mvi.presentation.R
-import com.mvi.presentation.model.movie.MovieListUiModel
-
 
 @Composable
 fun MovieListItem(
-    item: MovieListUiModel, onItemClick: (MovieListUiModel) -> Unit
+    item: MovieDomainModel.MovieListDomainModel,
+    onItemClick: (MovieDomainModel.MovieListDomainModel) -> Unit
 ) {
     val paddingXXSmall = dimensionResource(id = R.dimen.padding_xx_small)
     val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
@@ -51,11 +51,9 @@ fun MovieListItem(
                     .size(avatarSize)
                     .padding(end = paddingMedium)
             )
-
-
             Column {
                 Text(
-                    text = item.originalTitle!!,
+                    text = item.originalTitle,
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.fillMaxWidth()
                 )
