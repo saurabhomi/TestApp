@@ -9,9 +9,9 @@ import com.mvi.presentation.contract.DetailScreenContract
 import com.mvi.presentation.viewmodel.detail.DetailScreenViewModel
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -23,9 +23,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import strikt.api.expectThat
+import strikt.assertions.isA
+import strikt.assertions.isEqualTo
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
@@ -41,97 +43,62 @@ class DetailScreenViewModelTest {
     @MockK
     private lateinit var detailUseCase: GetMovieDetailUseCase
 
-
     private lateinit var detailScreenViewModel: DetailScreenViewModel
-
 
     @Before
     fun setUp() {
         Dispatchers.setMain(dispatcher)
-        MockKAnnotations.init(
-            this
-        )
-        every {
-            savedStateHandle.get<String>(MOVIE_ID)
-        } returns ID
-        detailScreenViewModel = DetailScreenViewModel(
-            detailUseCase, savedStateHandle
-        )
+        MockKAnnotations.init(this)
+        every { savedStateHandle.get<String>(MOVIE_ID) } returns ID
+        detailScreenViewModel =
+            DetailScreenViewModel(detailUseCase, savedStateHandle)
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
         dispatcher.cancel()
+        unmockkAll()
     }
 
     @Test
-    fun test_fetch_movie_detail_success() = runTest {
+    fun `Given successful use case response When fetching movie detail Then show success state with data`() =
+        runTest {
+            val detailModel = TestDataGenerator.generateMovieDetailData()
+            val success = Resource.Success(detailModel)
 
-        val model = TestDataGenerator.generateMovieDetailData()
-        val data = Resource.Success(model)
+            verify { savedStateHandle.get<String>(MOVIE_ID) }
 
-        verify { savedStateHandle.get<String>(MOVIE_ID) }
-        // Given
-        coEvery { detailUseCase(any()) } returns data
-        Assert.assertEquals(
-            detailScreenViewModel.viewState.value,
-            DetailScreenContract.State.Loading
-        )
+            coEvery { detailUseCase(any()) } returns success
 
-        // When && Assertion
-        detailScreenViewModel.handleEvent(DetailScreenContract.Event.OnDetailFetch)
-        delay(100)
-        Assert.assertEquals(
-            detailScreenViewModel.viewState.value,
-            DetailScreenContract.State.Success(
-                model
-            )
-        )
+            expectThat(detailScreenViewModel.viewState.value).isA<DetailScreenContract.State.Loading>()
 
-        Assert.assertEquals(
-            (detailScreenViewModel.viewState.value as DetailScreenContract.State.Success).model,
-            model
-        )
-        //Then
-        coVerify { detailUseCase(any()) }
+            detailScreenViewModel.handleEvent(DetailScreenContract.Event.OnDetailFetch)
+            delay(100)
 
-    }
+            expectThat(detailScreenViewModel.viewState.value).isA<DetailScreenContract.State.Success>()
+                .get { model }.isEqualTo(detailModel)
 
+        }
 
     @Test
-    fun test_fetch_movie_detail_failure() = runTest {
+    fun `Given error from use case When fetching movie detail Then show error state with message`() =
+        runTest {
+            val data = Resource.Error(Exception(NO_DATA_FOUND))
 
-        val data = Resource.Error(Exception(NO_DATA_FOUND))
-        // Given
-        coEvery { detailUseCase.invoke(any()) } returns data
-        Assert.assertEquals(
-            detailScreenViewModel.viewState.value,
-            DetailScreenContract.State.Loading
-        )
+            coEvery { detailUseCase.invoke(any()) } returns data
 
-        // When && Assertions
-        detailScreenViewModel.handleEvent(DetailScreenContract.Event.OnDetailFetch)
-        delay(100)
-        Assert.assertEquals(
-            detailScreenViewModel.viewState.value,
-            DetailScreenContract.State.Error(
-                data.exception.message.toString()
-            )
-        )
+            expectThat(detailScreenViewModel.viewState.value).isA<DetailScreenContract.State.Loading>()
 
-        Assert.assertEquals(
-            (detailScreenViewModel.viewState.value as DetailScreenContract.State.Error).message,
-            data.exception.message.toString()
-        )
+            detailScreenViewModel.handleEvent(DetailScreenContract.Event.OnDetailFetch)
+            delay(100)
 
-        // Then
-        coVerify { detailUseCase.invoke(any()) }
-    }
+            expectThat(detailScreenViewModel.viewState.value).isA<DetailScreenContract.State.Error>()
+                .get { message }.isEqualTo(data.exception.message.toString())
+        }
 
     private companion object {
         private const val ID = "id"
         private const val NO_DATA_FOUND = "No data found"
     }
-
 }

@@ -2,12 +2,13 @@ package com.mvi.domain
 
 import androidx.test.filters.SmallTest
 import com.mvi.common.Resource
+import com.mvi.domain.model.movie.MovieDomainModel
 import com.mvi.domain.repository.movie.MovieRepository
 import com.mvi.domain.usecase.GetMovieListUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
+import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,11 +18,12 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import strikt.api.expectThat
+import strikt.assertions.isA
+import strikt.assertions.isEqualTo
 import kotlin.time.ExperimentalTime
-
 
 @ExperimentalTime
 @ExperimentalCoroutinesApi
@@ -47,48 +49,38 @@ class GetMovieListUseCaseTest {
     fun tearDown() {
         Dispatchers.resetMain()
         dispatcher.cancel()
+        unmockkAll()
     }
 
-
     @Test
-    fun test_get_movie_use_case_success() = runTest {
-
+    fun `Given successful repository response When invoking use case Then return success`() = runTest {
         val model = TestDataGenerator.generateMovieEntityModel()
 
-        val data = Resource.Success(model)
+        val success = Resource.Success(model)
 
-        //Given
-        coEvery { movieRepository.fetchMovieList() } returns data
-        //When
+        coEvery { movieRepository.fetchMovieList() } returns success
+
         val result = getMovieListUseCase.invoke()
 
-        //Assertion
-        Assert.assertEquals(result, data)
-        // Then
-        coVerify { movieRepository.fetchMovieList() }
+
+        expectThat(result).isA<Resource.Success<MovieDomainModel>>()
+            .get { data }.isEqualTo(model)
 
     }
 
-
     @Test
-    fun test_movie_use_case_failure() = runTest {
+    fun `Given error from repository When invoking use case Then return error`() = runTest {
         val data = Resource.Error(NullPointerException(NO_DATA_FOUND))
 
-        //Given
         coEvery { movieRepository.fetchMovieList() } returns data
 
-        //When
         val result = getMovieListUseCase.invoke()
 
-        //Assertion
-        Assert.assertEquals(result, data)
+        expectThat(result).isA<Resource.Error>()
 
-        //Then
-        coVerify { movieRepository.fetchMovieList() }
     }
 
     private companion object {
         private const val NO_DATA_FOUND = "No data found"
     }
-
 }

@@ -15,10 +15,8 @@ import dagger.hilt.android.scopes.ViewModelScoped
 abstract class RepositoryModule {
 
     @Binds
-    @ViewModelScoped
     abstract fun provideMovieRepository(repository: MovieRepositoryImpl): MovieRepository
 
     @Binds
-    @ViewModelScoped
     abstract fun provideDetailRepository(repository: DetailRepositoryImpl): DetailRepository
 }

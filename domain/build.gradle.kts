@@ -68,6 +68,7 @@ dependencies {
     // Mock objects
     testImplementation(libs.mockk.mockk)
     testImplementation(libs.junit)
+    testImplementation(libs.strikt.core)
     androidTestImplementation(libs.androidx.junit)
 
 }

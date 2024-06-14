@@ -4,6 +4,7 @@ import androidx.test.filters.SmallTest
 import com.mvi.presentation.contract.SplashContract
 import com.mvi.presentation.viewmodel.splash.SplashViewModel
 import io.mockk.MockKAnnotations
+import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,6 +41,7 @@ class SplashViewModelTest {
     fun tearDown() {
         Dispatchers.resetMain()
         dispatcher.cancel()
+        unmockkAll()
     }
 
     @Test

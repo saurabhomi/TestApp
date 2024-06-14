@@ -101,7 +101,7 @@ dependencies {
     testImplementation(libs.androidx.runner)
     // Mock objects
     testImplementation(libs.mockk.mockk)
-
+    testImplementation(libs.strikt.core)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
 }

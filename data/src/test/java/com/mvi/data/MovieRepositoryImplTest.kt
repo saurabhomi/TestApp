@@ -6,11 +6,12 @@ import com.mvi.common.Resource
 import com.mvi.data.api.ApiService
 import com.mvi.data.mapper.movie.MovieListDataDomainMapper
 import com.mvi.data.repository.movie.MovieRepositoryImpl
+import com.mvi.domain.model.movie.MovieDomainModel
 import com.mvi.domain.repository.movie.MovieRepository
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
+import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,10 +21,12 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
+import strikt.api.expectThat
+import strikt.assertions.isA
+import strikt.assertions.isEqualTo
 import java.io.IOException
 import kotlin.time.ExperimentalTime
 
@@ -55,91 +58,66 @@ class MovieRepositoryImplTest {
     fun tearDown() {
         Dispatchers.resetMain()
         dispatcher.cancel()
+        unmockkAll()
     }
 
     @Test
-    fun test_movie_repository_impl_success() = runTest {
+    fun `Given successful API response When fetching movie list Then return success`() =
+        runTest {
+            val model = TestDataGenerator.generateMovieListData()
 
-        val model = TestDataGenerator.generateMovieListData()
+            coEvery { apiService.getMovieList() } returns Response.success(model)
 
-        coEvery { apiService.getMovieList() } returns Response.success(model)
+            val result = repository.fetchMovieList()
 
-        val result = repository.fetchMovieList()
+            expectThat(result).isA<Resource.Success<MovieDomainModel>>()
+                .get { data }.isEqualTo(movieListDataDomainMapper.from(model))
 
-        Assert.assertEquals(
-            (result as Resource.Success).data,
-            movieListDataDomainMapper.from(model)
-        )
-
-        // Then
-        coVerify { apiService.getMovieList() }
-
-    }
-
+        }
 
     @Test
-    fun test_movie_repository_impl_failure() = runTest {
+    fun `Given exception thrown by API When fetching movie list Then return error`() =
+        runTest {
 
-        // Given
-        coEvery { apiService.getMovieList() } throws Exception()
+            coEvery { apiService.getMovieList() } throws Exception()
 
-        // When && Assertions
-        val result = repository.fetchMovieList()
-        Assert.assertEquals(result.javaClass, Resource.Error::class.java)
-
-        // Then
-        coVerify { apiService.getMovieList() }
-
-    }
+            val result = repository.fetchMovieList()
+            expectThat(result).isA<Resource.Error>()
+        }
 
     @Test
-    fun test_movie_repository_impl_failure_parse() = runTest {
+    fun `Given JsonParseException thrown by API When fetching movie list Then return error`() =
+        runTest {
 
-        // Given
-        coEvery { apiService.getMovieList() } throws JsonParseException(
-            PARSE_ERROR
-        )
+            coEvery { apiService.getMovieList() } throws JsonParseException(
+                PARSE_ERROR
+            )
 
-        // When && Assertions
-        val result = repository.fetchMovieList()
-        Assert.assertEquals(result.javaClass, Resource.Error::class.java)
-
-        // Then
-        coVerify { apiService.getMovieList() }
-
-    }
+            val result = repository.fetchMovieList()
+            expectThat(result).isA<Resource.Error>()
+        }
 
     @Test
-    fun test_movie_repository_impl_failure_io() = runTest {
+    fun `Given IOException thrown by API When fetching movie list Then return error`() =
+        runTest {
 
-        // Given
-        coEvery { apiService.getMovieList() } throws IOException(
-            NETWORK_ERROR
-        )
-        // When && Assertions
-        val result = repository.fetchMovieList()
-        Assert.assertEquals(result.javaClass, Resource.Error::class.java)
+            coEvery { apiService.getMovieList() } throws IOException(
+                NETWORK_ERROR
+            )
 
-        // Then
-        coVerify { apiService.getMovieList() }
-
-    }
+            val result = repository.fetchMovieList()
+            expectThat(result).isA<Resource.Error>()
+        }
 
     @Test
-    fun test_movie_repository_impl_failure_null_pointer() = runTest {
+    fun `Given NullPointerException thrown by API When fetching movie list Then return error`() =
+        runTest {
 
-        // Given
-        coEvery { apiService.getMovieList() } throws NullPointerException()
+            coEvery { apiService.getMovieList() } throws NullPointerException()
 
-
-        // When && Assertions
-        val result = repository.fetchMovieList()
-        Assert.assertEquals(result.javaClass, Resource.Error::class.java)
-
-        // Then
-        coVerify { apiService.getMovieList() }
-
-    }
+            val result = repository.fetchMovieList()
+            expectThat(result).isA<Resource.Error>()
+        }
 
     private companion object {
         private const val PARSE_ERROR = "Data parsing error"

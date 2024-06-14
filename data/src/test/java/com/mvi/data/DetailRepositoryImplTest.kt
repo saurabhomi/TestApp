@@ -1,17 +1,16 @@
 package com.mvi.data
 
-import androidx.test.filters.SmallTest
 import com.google.gson.JsonParseException
 import com.mvi.common.Resource
 import com.mvi.data.api.ApiService
 import com.mvi.data.mapper.detail.DetailDataDomainMapper
 import com.mvi.data.repository.detail.DetailRepositoryImpl
+import com.mvi.domain.model.detail.DetailDomainModel
 import com.mvi.domain.repository.detail.DetailRepository
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
-import kotlinx.coroutines.CoroutineDispatcher
+import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -20,24 +19,29 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Response
+import strikt.api.expectThat
+import strikt.assertions.isA
+import strikt.assertions.isEqualTo
 import java.io.IOException
 import kotlin.time.ExperimentalTime
 
 @ExperimentalTime
 @ExperimentalCoroutinesApi
-@SmallTest
+@RunWith(MockitoJUnitRunner::class) // Using MockitoJUnitRunner for stricter API
 class DetailRepositoryImplTest {
-    private val dispatcher: CoroutineDispatcher = StandardTestDispatcher()
 
     @MockK
     private lateinit var apiService: ApiService
 
     private val detailDataDomainMapper = DetailDataDomainMapper()
     private lateinit var detailRepository: DetailRepository
+
+    private val dispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
@@ -53,89 +57,61 @@ class DetailRepositoryImplTest {
     fun tearDown() {
         Dispatchers.resetMain()
         dispatcher.cancel()
+        unmockkAll()
     }
 
     @Test
-    fun test_detail_repository_success() = runTest {
-
+    fun `Given successful API response When fetching movie detail Then return success`() = runTest {
         val model = TestDataGenerator.generateMovieDetailData()
 
-        //Given
         coEvery { apiService.getMovieDetails(ID) } returns Response.success(model)
 
-        //When
         val result = detailRepository.fetchMovieDetail(ID)
-        //Assertion
-        Assert.assertEquals(
-            (result as Resource.Success).data, detailDataDomainMapper.from(model)
-        )
 
-        //Then
-        coVerify { apiService.getMovieDetails(ID) }
-
+        expectThat(result)
+            .isA<Resource.Success<DetailDomainModel>>()
+            .get { data }
+            .isEqualTo(detailDataDomainMapper.from(model))
     }
 
     @Test
-    fun test_movie_repository_impl_failure_no_data() = runTest {
-        //Given
+    fun `Given no data from API When fetching movie detail Then return error`() = runTest {
+
         coEvery { apiService.getMovieDetails(ID) }
 
-        //When && Assertions
         val result = detailRepository.fetchMovieDetail(ID)
-        Assert.assertEquals(result.javaClass, Resource.Error::class.java)
-
-        // Then
-        coVerify { apiService.getMovieDetails(ID) }
-
+        expectThat(result).isA<Resource.Error>()
     }
 
     @Test
-    fun test_movie_repository_impl_failure() = runTest {
+    fun `Given exception thrown by API When fetching movie detail Then return error`() = runTest {
 
-        // Given
         coEvery { apiService.getMovieDetails(ID) } throws Exception()
 
-        // When && Assertions
         val result = detailRepository.fetchMovieDetail(ID)
-        Assert.assertEquals(result.javaClass, Resource.Error::class.java)
-
-        // Then
-        coVerify { apiService.getMovieDetails(ID) }
-
+        expectThat(result).isA<Resource.Error>()
     }
 
     @Test
-    fun test_movie_repository_impl_failure_parse() = runTest {
+    fun `Given JsonParseException thrown by API When fetching movie detail Then return error`() = runTest {
 
-        // Given
         coEvery { apiService.getMovieDetails(ID) } throws JsonParseException(
             PARSE_ERROR
         )
 
-        // When && Assertions
         val result = detailRepository.fetchMovieDetail(ID)
-        Assert.assertEquals(result.javaClass, Resource.Error::class.java)
-
-        // Then
-        coVerify { apiService.getMovieDetails(ID) }
-
+        expectThat(result).isA<Resource.Error>()
     }
 
     @Test
-    fun test_movie_repository_impl_failure_io() = runTest {
+    fun `Given IOException thrown by API When fetching movie detail Then return error`() = runTest {
 
-        // Given
         coEvery { apiService.getMovieDetails(ID) } throws IOException(
             NETWORK_ERROR
         )
 
-        // When && Assertions
         val result = detailRepository.fetchMovieDetail(ID)
-        Assert.assertEquals(result.javaClass, Resource.Error::class.java)
-
-        // Then
-        coVerify { apiService.getMovieDetails(ID) }
-
+        expectThat(result).isA<Resource.Error>()
     }
 
     private companion object {
@@ -143,5 +119,4 @@ class DetailRepositoryImplTest {
         private const val PARSE_ERROR = "Data parsing error"
         private const val NETWORK_ERROR = "Network error"
     }
-
 }

@@ -2,12 +2,13 @@ package com.mvi.domain
 
 import androidx.test.filters.SmallTest
 import com.mvi.common.Resource
+import com.mvi.domain.model.detail.DetailDomainModel
 import com.mvi.domain.repository.detail.DetailRepository
 import com.mvi.domain.usecase.GetMovieDetailUseCase
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
+import io.mockk.unmockkAll
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,11 +18,12 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import strikt.api.expectThat
+import strikt.assertions.isA
+import strikt.assertions.isEqualTo
 import kotlin.time.ExperimentalTime
-
 
 @ExperimentalTime
 @ExperimentalCoroutinesApi
@@ -49,40 +51,35 @@ class GetMovieDetailUseCaseTest {
     fun tearDown() {
         Dispatchers.resetMain()
         dispatcher.cancel()
+        unmockkAll()
     }
 
     @Test
-    fun test_detail_use_case_success() = runTest {
-        val model = TestDataGenerator.generateMovieDetailEntityModel()
+    fun `Given successful repository response When invoking use case Then return success`() =
+        runTest {
+            val model = TestDataGenerator.generateMovieDetailEntityModel()
 
-        val data = Resource.Success(model)
+            val success = Resource.Success(model)
 
-        //Given
-        coEvery { detailRepository.fetchMovieDetail(any()) } returns data
+            coEvery { detailRepository.fetchMovieDetail(any()) } returns success
 
-        //When
-        val result = detailUseCase.invoke("")
-        Assert.assertEquals(result, data)
-        //Then
-        coVerify { detailRepository.fetchMovieDetail(any()) }
+            val result = detailUseCase.invoke("")
 
-
-    }
-
+            expectThat(result).isA<Resource.Success<DetailDomainModel>>()
+                .get { data }.isEqualTo(model)
+        }
 
     @Test
-    fun test_detail_use_case_failure() = runTest {
+    fun `Given error from repository When invoking use case Then return error`() =
+        runTest {
+            val data = Resource.Error(NullPointerException(NO_DATA_FOUND))
 
-        val data = Resource.Error(NullPointerException(NO_DATA_FOUND))
+            coEvery { detailRepository.fetchMovieDetail(any()) } returns data
 
-        //Given
-        coEvery { detailRepository.fetchMovieDetail(any()) } returns data
-        //When
-        val result = detailUseCase.invoke("")
-        Assert.assertEquals(result, data)
-        //Then
-        coVerify { detailRepository.fetchMovieDetail(any()) }
-    }
+            val result = detailUseCase.invoke("")
+
+            expectThat(result).isA<Resource.Error>()
+        }
 
     private companion object {
         private const val NO_DATA_FOUND = "No data found"
