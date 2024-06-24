@@ -15,12 +15,12 @@ import javax.inject.Inject
 class MovieRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
     private val movieMapper: MovieListDataDomainMapper,
-    private val dispatcher: CoroutineDispatcher
-) : BaseRepository(), MovieRepository {
+    dispatcher: CoroutineDispatcher
+) : BaseRepository(dispatcher), MovieRepository {
 
     override suspend fun fetchMovieList(): Resource<MovieDomainModel> {
         return fetchAPiData(
-            { apiService.getMovieList() }, movieMapper, dispatcher
+            { apiService.getMovieList() }, movieMapper
         )
 
     }

@@ -21,6 +21,9 @@ class MovieScreenViewModel @Inject constructor(
     fun handleEvent(event: MovieListScreenContract.Event) {
         when (event) {
             is MovieListScreenContract.Event.OnListFetch -> {
+                setState {
+                    MovieListScreenContract.State.Loading
+                }
                 fetchMovieList()
             }
         }

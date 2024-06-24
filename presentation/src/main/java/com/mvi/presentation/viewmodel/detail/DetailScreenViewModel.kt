@@ -33,6 +33,9 @@ class DetailScreenViewModel @Inject constructor(
     fun handleEvent(event: DetailScreenContract.Event) {
         when (event) {
             DetailScreenContract.Event.OnDetailFetch -> {
+                setState {
+                    DetailScreenContract.State.Loading
+                }
                 fetchMovieList(id)
             }
         }

@@ -13,11 +13,10 @@ import kotlinx.coroutines.withContext
 import retrofit2.Response
 import java.io.IOException
 
-abstract class BaseRepository {
+abstract class BaseRepository(private val dispatcher: CoroutineDispatcher) {
     protected suspend fun <T, M> fetchAPiData(
         resource: suspend () -> Response<T>,
-        mapper: Mapper<T, M>,
-        dispatcher: CoroutineDispatcher
+        mapper: Mapper<T, M>
     ): Resource<M> {
         return try {
             withContext(dispatcher) {
